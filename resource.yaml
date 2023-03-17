@@ -1,0 +1,15 @@
+source_conf:
+  host: 192.168.19.49
+  query_port: 3306
+  user: root
+  password: 123456
+  source_database: dt_wm_ods
+  external_prefix: external_
+target_conf:
+  host: 192.168.18.208
+  query_port: 3306
+  rpc_port: 9020
+  user: root
+  password: 123456
+  target_database: hl_test_migration
+
