@@ -26,6 +26,11 @@ type ConfStruct struct {
 		Password       string `yaml:"password"`
 		TargetDatabase string `yaml:"target_database"`
 	} `yaml:"target_conf"`
+
+	ViewSync struct {
+		VIEW         bool `yaml:"view"`
+		MATERIALIZED bool `yaml:"materialized_view"`
+	} `yaml:"view_sync"`
 }
 
 func InitConf(confFile string) {

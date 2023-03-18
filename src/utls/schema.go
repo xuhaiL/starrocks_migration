@@ -8,6 +8,61 @@ import (
 	"strings"
 )
 
+var createMaterializedView = "CREATE MATERIALIZED VIEW `"
+var createMaterializedViewNotExists = "CREATE MATERIALIZED VIEW IF NOT EXISTS `"
+
+func GetMaterializedViewSchema(tableName string, conn *sql.DB, sourceDatabase string, targetDatabase string) string {
+	var ddl = fmt.Sprintf("select TABLE_NAME, MATERIALIZED_VIEW_DEFINITION from information_schema.materialized_views where TABLE_SCHEMA  = '%s' and TABLE_NAME = '%s' ", sourceDatabase, tableName)
+	rows, err := RunQuerySql(conn, ddl)
+	if err != nil {
+		errMsg := fmt.Sprintf("Error, get materialized ViewSchema sql %s, err: %v", ddl, err)
+		Error(errMsg)
+		os.Exit(-1011)
+	}
+
+	var view, ViewSchema string
+	for rows.Next() {
+		err := rows.Scan(&view, &ViewSchema)
+		if err != nil {
+			Error(fmt.Sprintf("Error rows.get materialized ViewSchema error, %v", err))
+			os.Exit(-1012)
+		}
+	}
+
+	cv := strings.Replace(ViewSchema, createMaterializedView, createMaterializedViewNotExists, 1)
+
+	return strings.ReplaceAll(cv, sourceDatabase, targetDatabase)
+
+}
+
+var createView = "CREATE VIEW `"
+var createViewNotExists = "CREATE VIEW IF NOT EXISTS `"
+
+func GetViewSchema(tableName string, conn *sql.DB, sourceDatabase string, targetDatabase string) string {
+
+	var ddl = fmt.Sprintf("SHOW CREATE VIEW %s", tableName)
+	rows, err := RunQuerySql(conn, ddl)
+	if err != nil {
+		errMsg := fmt.Sprintf("Error, getViewSchema sql %s, err: %v", ddl, err)
+		Error(errMsg)
+		os.Exit(-1011)
+	}
+
+	var view, ViewSchema, characterSetClient, collationConnection string
+	for rows.Next() {
+		err := rows.Scan(&view, &ViewSchema, &characterSetClient, &collationConnection)
+		if err != nil {
+			Error(fmt.Sprintf("Error rows.getViewSchema error, %v", err))
+			os.Exit(-1012)
+		}
+	}
+
+	cv := strings.Replace(ViewSchema, createView, createViewNotExists, 1)
+
+	return strings.ReplaceAll(cv, sourceDatabase, targetDatabase)
+
+}
+
 var createTable string = "CREATE TABLE `"
 var createTableNotExists string = "CREATE TABLE IF NOT EXISTS `%s`.`"
 var splitExternalTableNNotExists string = "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`"
