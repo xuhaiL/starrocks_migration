@@ -33,18 +33,30 @@ func main() {
 	valid.ConnectionValid()
 	utls.InitExternalDatabase()
 
-	insertList := sync.TableSchemaSync(conf)
+	if conf.SyncConf.Table {
+		insertList := sync.TableSchemaSync(conf)
 
-	// 为了让 sr 自动同步元数据，所以这里 sleep 一下
-	time.Sleep(time.Duration(30) * time.Second)
-	sync.DataSync(insertList)
-
-	if conf.ViewSync.VIEW {
-		sync.VIEWSync(conf)
+		if conf.SyncConf.Data {
+			// 为了让 sr 自动同步元数据，所以这里 sleep 一下
+			time.Sleep(time.Duration(30) * time.Second)
+			sync.DataSync(insertList)
+		} else {
+			utls.Info("不同步表数据")
+		}
+	} else {
+		utls.Info("不同步表结构")
 	}
 
-	if conf.ViewSync.MATERIALIZED {
+	if conf.SyncConf.MATERIALIZED {
 		sync.MaterializedVIEWSync(conf)
+	} else {
+		utls.Info("不同步物化视图")
+	}
+
+	if conf.SyncConf.VIEW {
+		sync.VIEWSync(conf)
+	} else {
+		utls.Info("不同步逻辑视图")
 	}
 
 	utls.CloseAll()

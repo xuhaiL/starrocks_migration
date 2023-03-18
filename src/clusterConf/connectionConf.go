@@ -27,10 +27,12 @@ type ConfStruct struct {
 		TargetDatabase string `yaml:"target_database"`
 	} `yaml:"target_conf"`
 
-	ViewSync struct {
+	SyncConf struct {
+		Table        bool `yaml:"table"`
+		Data         bool `yaml:"data"`
 		VIEW         bool `yaml:"view"`
 		MATERIALIZED bool `yaml:"materialized_view"`
-	} `yaml:"view_sync"`
+	} `yaml:"sync_conf"`
 }
 
 func InitConf(confFile string) {

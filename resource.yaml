@@ -12,7 +12,9 @@ target_conf:
   user: root
   password: 123456
   target_database: hl_test_migration
-view_sync:
+sync_conf:
+  table: true
+  data: true
   view: true
   materialized_view: false
 
