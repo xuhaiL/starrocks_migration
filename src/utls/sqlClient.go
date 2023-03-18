@@ -12,6 +12,16 @@ import (
 var SourceConn *sql.DB
 var TargetConn *sql.DB
 
+func RunExecuteSqlNoExit(conn *sql.DB, sqlStat string) (sql.Result, error) {
+	result, err := conn.Exec(sqlStat)
+	if err != nil {
+		Error(fmt.Sprintf("query error, sql: \n %s \n error: %v", sqlStat, err))
+		//os.Exit(-2011)
+	}
+
+	return result, err
+}
+
 func RunExecuteSql(conn *sql.DB, sqlStat string) (sql.Result, error) {
 	result, err := conn.Exec(sqlStat)
 	if err != nil {

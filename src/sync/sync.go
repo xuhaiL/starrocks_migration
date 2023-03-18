@@ -18,7 +18,7 @@ func MaterializedVIEWSync(conf *clusterConf.ConfStruct) {
 	for e := views.Front(); e != nil; e = e.Next() {
 		viewName := fmt.Sprintf("%v", e.Value)
 		viewSchema := utls.GetMaterializedViewSchema(viewName, utls.SourceConn, sourceConf.SourceDatabase, TargetConf.TargetDatabase)
-		utls.RunExecuteSql(utls.TargetConn, viewSchema)
+		utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
 		cnt++
 		utls.Info(fmt.Sprintf("Materialized view count %d, sync for %d, %s success", views.Len(), cnt, viewName))
 	}
@@ -37,7 +37,7 @@ func VIEWSync(conf *clusterConf.ConfStruct) {
 	for e := views.Front(); e != nil; e = e.Next() {
 		viewName := fmt.Sprintf("%v", e.Value)
 		viewSchema := utls.GetViewSchema(viewName, utls.SourceConn, sourceConf.SourceDatabase, TargetConf.TargetDatabase)
-		utls.RunExecuteSql(utls.TargetConn, viewSchema)
+		utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
 		cnt++
 		utls.Info(fmt.Sprintf("view count %d, sync for %d, %s success", views.Len(), cnt, viewName))
 	}
