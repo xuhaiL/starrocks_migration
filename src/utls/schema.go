@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"regexp"
 	"starrocks_migration/src/clusterConf"
 	"strings"
 )
@@ -31,12 +32,27 @@ func GetMaterializedViewSchema(tableName string, conn *sql.DB, sourceDatabase st
 
 	cv := strings.Replace(ViewSchema, createMaterializedView, createMaterializedViewNotExists, 1)
 
+	// 修改列名
+	result := compile.FindStringSubmatch(cv)
+	var oldColumns, newColumn string
+	if len(result) > 1 {
+		oldColumns = result[1]
+		fields := strings.Split(oldColumns, ",")
+		for i := range fields {
+			fields[i] = fmt.Sprintf("`%s`", strings.TrimSpace(fields[i]))
+		}
+		newColumn = strings.Join(fields, ",")
+		cv = strings.ReplaceAll(cv, oldColumns, newColumn)
+	}
+
 	return strings.ReplaceAll(cv, sourceDatabase, targetDatabase)
 
 }
 
 var createView = "CREATE VIEW `"
 var createViewNotExists = "CREATE VIEW IF NOT EXISTS `"
+var reg = "\\((.*?)\\) COMMENT|comment" // 列字段中有括号 (物料)编码
+var compile = regexp.MustCompile(reg)
 
 func GetViewSchema(tableName string, conn *sql.DB, sourceDatabase string, targetDatabase string) string {
 
@@ -58,6 +74,18 @@ func GetViewSchema(tableName string, conn *sql.DB, sourceDatabase string, target
 	}
 
 	cv := strings.Replace(ViewSchema, createView, createViewNotExists, 1)
+	// 修改列名
+	result := compile.FindStringSubmatch(cv)
+	var oldColumns, newColumn string
+	if len(result) > 1 {
+		oldColumns = result[1]
+		fields := strings.Split(oldColumns, ",")
+		for i := range fields {
+			fields[i] = fmt.Sprintf("`%s`", strings.TrimSpace(fields[i]))
+		}
+		newColumn = strings.Join(fields, ",")
+		cv = strings.ReplaceAll(cv, oldColumns, newColumn)
+	}
 
 	return strings.ReplaceAll(cv, sourceDatabase, targetDatabase)
 

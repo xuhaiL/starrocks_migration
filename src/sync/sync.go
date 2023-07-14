@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"starrocks_migration/src/clusterConf"
@@ -15,15 +16,28 @@ func MaterializedVIEWSync(conf *clusterConf.ConfStruct) {
 	utls.Info(fmt.Sprintf("获取到的物化视图数量 %d", views.Len()))
 
 	cnt := 0
+	errorViewList := list.New()
 	for e := views.Front(); e != nil; e = e.Next() {
 		viewName := fmt.Sprintf("%v", e.Value)
 		viewSchema := utls.GetMaterializedViewSchema(viewName, utls.SourceConn, sourceConf.SourceDatabase, TargetConf.TargetDatabase)
-		utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
-		cnt++
+		_, err := utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
+		if err != nil {
+			errorViewList.PushBack(viewName)
+		} else {
+			cnt++
+		}
 		utls.Info(fmt.Sprintf("Materialized view count %d, sync for %d, %s success", views.Len(), cnt, viewName))
 	}
 
 	utls.Info(fmt.Sprintf("获取到的物化视图数量 %d, 已同步完成数量 %d", views.Len(), cnt))
+	if errorViewList.Len() > 0 {
+		var bf bytes.Buffer
+		for e := errorViewList.Front(); e != nil; e = e.Next() {
+			bf.WriteString(fmt.Sprintf("%v", e.Value))
+			bf.WriteString("\n")
+		}
+		utls.Error(fmt.Sprintf("同步失败物化视图数量 %d, 物化视图名称\n%s", errorViewList.Len(), bf.String()))
+	}
 }
 
 func VIEWSync(conf *clusterConf.ConfStruct) {
@@ -34,15 +48,28 @@ func VIEWSync(conf *clusterConf.ConfStruct) {
 	utls.Info(fmt.Sprintf("获取到的视图数量 %d", views.Len()))
 
 	cnt := 0
+	errorViewList := list.New()
 	for e := views.Front(); e != nil; e = e.Next() {
 		viewName := fmt.Sprintf("%v", e.Value)
 		viewSchema := utls.GetViewSchema(viewName, utls.SourceConn, sourceConf.SourceDatabase, TargetConf.TargetDatabase)
-		utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
-		cnt++
+		_, err := utls.RunExecuteSqlNoExit(utls.TargetConn, viewSchema)
+		if err != nil {
+			errorViewList.PushBack(viewName)
+		} else {
+			cnt++
+		}
 		utls.Info(fmt.Sprintf("view count %d, sync for %d, %s success", views.Len(), cnt, viewName))
 	}
 
 	utls.Info(fmt.Sprintf("获取到的视图数量 %d, 已同步完成数量 %d", views.Len(), cnt))
+	if errorViewList.Len() > 0 {
+		var bf bytes.Buffer
+		for e := errorViewList.Front(); e != nil; e = e.Next() {
+			bf.WriteString(fmt.Sprintf("%v", e.Value))
+			bf.WriteString("\n")
+		}
+		utls.Error(fmt.Sprintf("同步失败视图数量 %d, 视图名称 \n%s", errorViewList.Len(), bf.String()))
+	}
 }
 
 func DataSync(insertList *list.List) {
